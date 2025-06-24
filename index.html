@@ -6,10 +6,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SnapWeb - Welcome</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-  
+
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
   <style>
     * {
       margin: 0;
@@ -69,6 +74,12 @@
       font-weight: bold;
       cursor: pointer;
     }
+    @media (max-width: 400px) {
+      .auth-container {
+        width: 90%;
+        padding: 25px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -94,14 +105,14 @@
 
   <script>
     const firebaseConfig = {
-  apiKey: "AIzaSyDMg6CD6aBHSix57jcxFDvB4uHk4RDrJyc",
-  authDomain: "vchat-5ba2e.firebaseapp.com",
-  databaseURL: "https://vchat-5ba2e-default-rtdb.firebaseio.com",
-  projectId: "vchat-5ba2e",
-  storageBucket: "vchat-5ba2e.firebasestorage.app",
-  messagingSenderId: "64968376129",
-  appId: "1:64968376129:web:367ef0bdb422eb1904ebc0"
-};
+      apiKey: "AIzaSyDMg6CD6aBHSix57jcxFDvB4uHk4RDrJyc",
+      authDomain: "vchat-5ba2e.firebaseapp.com",
+      databaseURL: "https://vchat-5ba2e-default-rtdb.firebaseio.com",
+      projectId: "vchat-5ba2e",
+      storageBucket: "vchat-5ba2e.firebasestorage.app",
+      messagingSenderId: "64968376129",
+      appId: "1:64968376129:web:367ef0bdb422eb1904ebc0"
+    };
 
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
@@ -116,6 +127,11 @@
       const email = document.getElementById('registerEmail').value;
       const password = document.getElementById('registerPassword').value;
 
+      if (!email || !password) {
+        Swal.fire("Please fill in all fields!");
+        return;
+      }
+
       auth.createUserWithEmailAndPassword(email, password)
         .then((userCredential) => {
           const user = userCredential.user;
@@ -123,11 +139,11 @@
             email: user.email,
             createdAt: new Date().toISOString()
           });
-          alert("Registration successful! Please login.");
+          Swal.fire("Registered!", "Please login now.", "success");
           toggleForm('login');
         })
         .catch((error) => {
-          alert(error.message);
+          Swal.fire("Error", error.message, "error");
         });
     }
 
@@ -135,13 +151,27 @@
       const email = document.getElementById('loginEmail').value;
       const password = document.getElementById('loginPassword').value;
 
+      if (!email || !password) {
+        Swal.fire("Please enter email and password!");
+        return;
+      }
+
+      Swal.fire({
+        title: "Logging in...",
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+
       auth.signInWithEmailAndPassword(email, password)
-        .then((userCredential) => {
-          alert("Login successful! Redirecting to chat...");
-          // window.location.href = "chat.html"; // Add this when chat page ready
+        .then(() => {
+          Swal.fire("Success!", "Redirecting to chat...", "success");
+          setTimeout(() => {
+            window.location.href = "chat.html"; // Un-comment when ready
+          }, 1500);
         })
         .catch((error) => {
-          alert(error.message);
+          Swal.fire("Error", error.message, "error");
         });
     }
   </script>
