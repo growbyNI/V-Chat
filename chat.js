@@ -25,7 +25,7 @@ const db = firebase.database();
 
 const messageInput = document.getElementById("message-input");
 const sendBtn = document.getElementById("send-btn");
-const messageContainer = document.querySelector(".message-container");
+const messageContainer = document.getElementById("message-container");
 const chatHeader = document.getElementById("chat-header");
 
 // ✅ Render name first
