@@ -95,8 +95,9 @@
 
   <div class="auth-container" id="registerBox" style="display: none;">
     <h2>Register on SnapWeb</h2>
-    <input type="email" id="registerEmail" placeholder="Email">
-    <input type="password" id="registerPassword" placeholder="Password">
+<input type="text" id="registerUsername" placeholder="Username">
+<input type="email" id="registerEmail" placeholder="Email">
+<input type="password" id="registerPassword" placeholder="Password">
     <button onclick="registerUser()">Register</button>
     <div class="toggle">
       Already have an account? <a onclick="toggleForm('login')">Login here</a>
@@ -124,21 +125,24 @@
     }
 
     function registerUser() {
-      const email = document.getElementById('registerEmail').value;
-      const password = document.getElementById('registerPassword').value;
+  
+      const username = document.getElementById('registerUsername').value;
+const email = document.getElementById('registerEmail').value;
+const password = document.getElementById('registerPassword').value;
 
-      if (!email || !password) {
-        Swal.fire("Please fill in all fields!");
-        return;
-      }
+if (!username || !email || !password) {
+  Swal.fire("Please fill in all fields!");
+  return;
+}
 
       auth.createUserWithEmailAndPassword(email, password)
         .then((userCredential) => {
           const user = userCredential.user;
           db.ref('users/' + user.uid).set({
-            email: user.email,
-            createdAt: new Date().toISOString()
-          });
+  username: username,
+  email: email,
+  createdAt: new Date().toISOString()
+});
           Swal.fire("Registered!", "Please login now.", "success");
           toggleForm('login');
         })
