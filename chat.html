@@ -22,7 +22,8 @@
 
   <div class="popup" id="popup">
     <h3>Search Username</h3>
-    <input type="text" id="searchInput" placeholder="Type username..." oninput="searchUser()">
+  <input type="text" id="searchInput" placeholder="Search username">
+<button onclick="searchUserByUsername(document.getElementById('searchInput').value)">Search</button>
     <div class="results" id="results"></div>
   </div>
 
@@ -76,26 +77,19 @@
     }
 
     // 🔍 Search users
-    function searchUser() {
-      const searchText = document.getElementById("searchInput").value.toLowerCase();
-      const resultsDiv = document.getElementById("results");
-      resultsDiv.innerHTML = '';
-
-      if (searchText.length < 2) return;
-
-      db.ref("users").once("value", snapshot => {
-        snapshot.forEach(child => {
-          const user = child.val();
-          const uid = child.key;
-          if (user.username && user.username.toLowerCase().includes(searchText)) {
-            const item = document.createElement("div");
-            item.className = "result-item";
-            item.innerHTML = `<span>${user.username}</span><button onclick="addFriend('${uid}')">Add</button>`;
-            resultsDiv.appendChild(item);
-          }
-        });
+    function searchUserByUsername(usernameToSearch) {
+  db.ref("users").orderByChild("username").equalTo(usernameToSearch).once("value", function(snapshot) {
+    if (snapshot.exists()) {
+      snapshot.forEach(function(childSnapshot) {
+        const userData = childSnapshot.val();
+        console.log("User found:", userData);
+        Swal.fire("User Found", `Email: ${userData.email}`, "success");
       });
+    } else {
+      Swal.fire("No user found with that username", "", "info");
     }
+  });
+          }
 
     // ➕ Add friend
     function addFriend(friendUID) {
