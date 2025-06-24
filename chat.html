@@ -41,5 +41,49 @@
   </footer>
 
   <script src="chat.js"></script>
+
+    <script>
+    // presence.js
+const userId = localStorage.getItem("vchatUserId");
+if (!firebase.apps.length) {
+  firebase.initializeApp({
+    apiKey: "AIzaSyDMg6CD6aBHSix57jcxFDvB4uHk4RDrJyc",
+    authDomain: "vchat-5ba2e.firebaseapp.com",
+    databaseURL: "https://vchat-5ba2e-default-rtdb.firebaseio.com",
+    projectId: "vchat-5ba2e",
+    storageBucket: "vchat-5ba2e.appspot.com",
+    messagingSenderId: "64968376129",
+    appId: "1:64968376129:web:367ef0bdb422eb1904ebc0"
+  });
+}
+
+if (userId) {
+  const db = firebase.database();
+  const userStatusRef = db.ref(`/status/${userId}`);
+  const connectedRef = db.ref(".info/connected");
+
+  const isOfflineForDatabase = {
+    state: "offline",
+    last_changed: firebase.database.ServerValue.TIMESTAMP,
+  };
+
+  const isOnlineForDatabase = {
+    state: "online",
+    last_changed: firebase.database.ServerValue.TIMESTAMP,
+  };
+
+  connectedRef.on("value", (snapshot) => {
+    if (snapshot.val() === false) return;
+
+    userStatusRef
+      .onDisconnect()
+      .set(isOfflineForDatabase)
+      .then(() => {
+        userStatusRef.set(isOnlineForDatabase);
+      });
+  });
+}
+
+  </script>
 </body>
 </html>
