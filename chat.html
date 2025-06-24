@@ -23,7 +23,7 @@
   <div class="popup" id="popup">
     <h3>Search Username</h3>
   <input type="text" id="searchInput" placeholder="Search username">
-<button onclick="searchUserByUsername(document.getElementById('searchInput').value)">Search</button>
+<button id="search-btn" onclick="searchUserByUsername(document.getElementById('searchInput').value)">Search</button>
     <div class="results" id="results"></div>
   </div>
 
@@ -69,6 +69,10 @@
         window.location.href = "loginandregister.html";
       }
     });
+
+    document.getElementById('search-btn').addEventListener('click', function (){
+      searchUserByUsername();
+    })
 
     // 🔘 Show/hide popup
     function togglePopup() {
