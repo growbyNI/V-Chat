@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>VChat - Chat</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f9f9f9; margin: 0; padding: 0; }
+    .add-btn { margin: 20px; padding: 10px 20px; background: #00b894; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    .popup { display: none; position: fixed; top: 20%; left: 50%; transform: translateX(-50%); background: white; border-radius: 10px; padding: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); width: 300px; z-index: 10; }
+    .popup input { width: 100%; padding: 10px; margin-top: 10px; border-radius: 5px; border: 1px solid #ccc; }
+    .results { margin-top: 10px; }
+    .result-item { background: #ecf0f1; padding: 8px 10px; border-radius: 6px; margin: 6px 0; display: flex; justify-content: space-between; align-items: center; }
+    .result-item button { background: #0984e3; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+    #friendList { padding: 20px; }
+    #friendList li { padding: 10px; background: #dfe6e9; margin-bottom: 10px; border-radius: 6px; }
+    #welcome { margin: 20px; font-size: 18px; }
+  </style>
+</head>
+<body>
+
+  <h2 id="welcome">Welcome!</h2>
+  <button class="add-btn" onclick="togglePopup()">➕ Add Friend</button>
+
+  <div class="popup" id="popup">
+    <h3>Search Username</h3>
+    <input type="text" id="searchInput" placeholder="Type username..." oninput="searchUser()">
+    <div class="results" id="results"></div>
+  </div>
+
+  <div id="friendList">
+    <h2>👥 Your Friends</h2>
+    <ul id="friendsUL"></ul>
+  </div>
+
+  <!-- Firebase Libraries -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+
+  <script>
+    // ✅ Firebase Config
+    const firebaseConfig = {
+      apiKey: "AIzaSyDMg6CD6aBHSix57jcxFDvB4uHk4RDrJyc",
+      authDomain: "vchat-5ba2e.firebaseapp.com",
+      databaseURL: "https://vchat-5ba2e-default-rtdb.firebaseio.com",
+      projectId: "vchat-5ba2e",
+      storageBucket: "vchat-5ba2e.firebasestorage.app",
+      messagingSenderId: "64968376129",
+      appId: "1:64968376129:web:367ef0bdb422eb1904ebc0"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const auth = firebase.auth();
+
+    // 🔐 Check if user is logged in
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        const userId = user.uid;
+        // Show welcome name
+        db.ref("users/" + userId).once("value", snapshot => {
+          const username = snapshot.val()?.username || "User";
+          document.getElementById("welcome").innerText = `Welcome, ${username}!`;
+        });
+
+        loadFriends(userId);
+      } else {
+        // Redirect to login if not logged in
+        window.location.href = "loginandregister.html";
+      }
+    });
+
+    // 🔘 Show/hide popup
+    function togglePopup() {
+      const popup = document.getElementById("popup");
+      popup.style.display = (popup.style.display === "block") ? "none" : "block";
+    }
+
+    // 🔍 Search users
+    function searchUser() {
+      const searchText = document.getElementById("searchInput").value.toLowerCase();
+      const resultsDiv = document.getElementById("results");
+      resultsDiv.innerHTML = '';
+
+      if (searchText.length < 2) return;
+
+      db.ref("users").once("value", snapshot => {
+        snapshot.forEach(child => {
+          const user = child.val();
+          const uid = child.key;
+          if (user.username && user.username.toLowerCase().includes(searchText)) {
+            const item = document.createElement("div");
+            item.className = "result-item";
+            item.innerHTML = `<span>${user.username}</span><button onclick="addFriend('${uid}')">Add</button>`;
+            resultsDiv.appendChild(item);
+          }
+        });
+      });
+    }
+
+    // ➕ Add friend
+    function addFriend(friendUID) {
+      const currentUID = firebase.auth().currentUser.uid;
+      if (friendUID === currentUID) {
+        alert("You cannot add yourself.");
+        return;
+      }
+
+      db.ref(`users/${currentUID}/friends/${friendUID}`).set(true).then(() => {
+        alert("Friend Added!");
+        togglePopup();
+        loadFriends(currentUID);
+      });
+    }
+
+    // 👥 Load friends
+    function loadFriends(userId) {
+      const friendUL = document.getElementById("friendsUL");
+      friendUL.innerHTML = '';
+
+      db.ref(`users/${userId}/friends`).once('value', snapshot => {
+        if (!snapshot.exists()) {
+          friendUL.innerHTML = "<li>No friends yet.</li>";
+          return;
+        }
+
+        snapshot.forEach(child => {
+          const friendUID = child.key;
+          db.ref(`users/${friendUID}`).once('value', friendSnap => {
+            const username = friendSnap.val()?.username || "Unknown";
+            const li = document.createElement("li");
+            li.textContent = username;
+            friendUL.appendChild(li);
+          });
+        });
+      });
+    }
+  </script>
+
+</body>
+</html>
