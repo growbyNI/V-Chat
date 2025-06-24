@@ -1,0 +1,148 @@
+<!-- SnapWeb - Login & Register Page with Firebase Data Push -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SnapWeb - Welcome</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+    body {
+      background: linear-gradient(135deg, #fc466b, #3f5efb);
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .auth-container {
+      background: white;
+      padding: 40px;
+      border-radius: 15px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+      width: 350px;
+      transition: 0.3s ease;
+    }
+    h2 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 20px;
+    }
+    input {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      background-color: #3f5efb;
+      border: none;
+      color: white;
+      border-radius: 10px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    button:hover {
+      background-color: #334aca;
+    }
+    .toggle {
+      margin-top: 15px;
+      text-align: center;
+      color: #666;
+    }
+    .toggle a {
+      color: #3f5efb;
+      text-decoration: none;
+      font-weight: bold;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="auth-container" id="loginBox">
+    <h2>Login to SnapWeb</h2>
+    <input type="email" id="loginEmail" placeholder="Email">
+    <input type="password" id="loginPassword" placeholder="Password">
+    <button onclick="loginUser()">Login</button>
+    <div class="toggle">
+      Don't have an account? <a onclick="toggleForm('register')">Register here</a>
+    </div>
+  </div>
+
+  <div class="auth-container" id="registerBox" style="display: none;">
+    <h2>Register on SnapWeb</h2>
+    <input type="email" id="registerEmail" placeholder="Email">
+    <input type="password" id="registerPassword" placeholder="Password">
+    <button onclick="registerUser()">Register</button>
+    <div class="toggle">
+      Already have an account? <a onclick="toggleForm('login')">Login here</a>
+    </div>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDMg6CD6aBHSix57jcxFDvB4uHk4RDrJyc",
+      authDomain: "vchat-5ba2e.firebaseapp.com",
+      databaseURL: "https://vchat-5ba2e-default-rtdb.firebaseio.com",
+      projectId: "vchat-5ba2e",
+      storageBucket: "vchat-5ba2e.appspot.com",
+      messagingSenderId: "64968376129",
+      appId: "1:64968376129:web:367ef0bdb422eb1904ebc0"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.database();
+
+    function toggleForm(mode) {
+      document.getElementById('loginBox').style.display = mode === 'login' ? 'block' : 'none';
+      document.getElementById('registerBox').style.display = mode === 'register' ? 'block' : 'none';
+    }
+
+    function registerUser() {
+      const email = document.getElementById('registerEmail').value;
+      const password = document.getElementById('registerPassword').value;
+
+      auth.createUserWithEmailAndPassword(email, password)
+        .then((userCredential) => {
+          const user = userCredential.user;
+          db.ref('users/' + user.uid).set({
+            email: user.email,
+            createdAt: new Date().toISOString()
+          });
+          alert("Registration successful! Please login.");
+          toggleForm('login');
+        })
+        .catch((error) => {
+          alert(error.message);
+        });
+    }
+
+    function loginUser() {
+      const email = document.getElementById('loginEmail').value;
+      const password = document.getElementById('loginPassword').value;
+
+      auth.signInWithEmailAndPassword(email, password)
+        .then((userCredential) => {
+          alert("Login successful! Redirecting to chat...");
+          // window.location.href = "chat.html"; // Add this when chat page ready
+        })
+        .catch((error) => {
+          alert(error.message);
+        });
+    }
+  </script>
+</body>
+</html>
