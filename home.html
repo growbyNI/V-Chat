@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vchat - Home Page</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+</head>
+
+<body>
+    <header>
+        <div class="main-container-top">
+            <a href="">
+                <img class="avatar" src="img/img1.webp" alt="error image">
+            </a>
+            <img src="img/logo.png" alt="Logo" class="logo-img">
+            <button id="friend-add" class="add-friend-btn">+ Add</button>
+        </div>
+    </header>
+    <main>
+        
+        <div class="search-btn-container">
+            <input type="search" id="search-btn" placeholder=" Search Your Friends">
+            <button id="view-requests-btn" class="request-btn">Requests (0)</button>
+        </div>
+
+
+        <div id="request-container" class="add-friend-container" style="display:none;">
+  <h3>Friend Requests</h3>
+  <div id="request-list"></div>
+</div>
+
+         
+        <div class="chat-container">
+            
+        </div>
+        <div id="add-friend-container" class="add-friend-container">
+            <div style="display: flex;">
+           <input type="search" id="search-bt-add" placeholder=" Search">
+            <button  id="search-btn-add">🔍</button>
+            </div>
+            <div class="search-result-container" id="search-results"></div>
+
+        </div>
+    </main>
+    <script src="asdd.js"></script>
+
+    <script>
+        // presence.js
+const userId = localStorage.getItem("vchatUserId");
+if (!firebase.apps.length) {
+  firebase.initializeApp({
+    apiKey: "AIzaSyDMg6CD6aBHSix57jcxFDvB4uHk4RDrJyc",
+    authDomain: "vchat-5ba2e.firebaseapp.com",
+    databaseURL: "https://vchat-5ba2e-default-rtdb.firebaseio.com",
+    projectId: "vchat-5ba2e",
+    storageBucket: "vchat-5ba2e.appspot.com",
+    messagingSenderId: "64968376129",
+    appId: "1:64968376129:web:367ef0bdb422eb1904ebc0"
+  });
+}
+
+if (userId) {
+  const db = firebase.database();
+  const userStatusRef = db.ref(`/status/${userId}`);
+  const connectedRef = db.ref(".info/connected");
+
+  const isOfflineForDatabase = {
+    state: "offline",
+    last_changed: firebase.database.ServerValue.TIMESTAMP,
+  };
+
+  const isOnlineForDatabase = {
+    state: "online",
+    last_changed: firebase.database.ServerValue.TIMESTAMP,
+  };
+
+  connectedRef.on("value", (snapshot) => {
+    if (snapshot.val() === false) return;
+
+    userStatusRef
+      .onDisconnect()
+      .set(isOfflineForDatabase)
+      .then(() => {
+        userStatusRef.set(isOnlineForDatabase);
+      });
+  });
+}
+
+    </script>
+</body>
+
+</html>

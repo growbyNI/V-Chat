@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Vchat - Chat</title>
+  <link rel="stylesheet" href="style.css" />
+  <script type="text/javascript"
+        src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js">
+</script>
+<script type="text/javascript">
+   (function(){
+      emailjs.init({
+        publicKey: "1L0OTMVx_Ent25BL_",
+      });
+   })();
+</script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+</head>
+<body class="chat-page">
+
+  <!-- Top Header -->
+  <header class="chat-header">
+    <button onclick="goBack()" class="back-btn">←</button>
+    
+    <div class="chat-user-info">
+      <div class="chat-avatar" id="chat-avatar">A</div>
+      <div>
+        <!-- <h2 id="chat-username">Friend Name</h2> -->
+         <div id="chat-header">
+  <strong id="friend-name"></strong><br>
+  <small id="friend-status">Checking status...</small>
+</div>
+
+
+       
+      </div>
+    </div>
+  </header>
+
+  <!-- Message Area -->
+  <main class="chat-main" id="message-container">
+    <!-- Messages will appear here -->
+  </main>
+
+  <!-- Input Area -->
+  <footer class="chat-input-area">
+    <input style="height: 60px;" type="text" id="message-input" placeholder="Type a message..." />
+    <button style="height: 40px;" class="send-msg-btn" id="send-btn">SEND</button>
+  </footer>
+
+  <script src="chat.js"></script>
+  <script>
+    // presence.js
+const userId = localStorage.getItem("vchatUserId");
+if (!firebase.apps.length) {
+  firebase.initializeApp({
+    apiKey: "AIzaSyDMg6CD6aBHSix57jcxFDvB4uHk4RDrJyc",
+    authDomain: "vchat-5ba2e.firebaseapp.com",
+    databaseURL: "https://vchat-5ba2e-default-rtdb.firebaseio.com",
+    projectId: "vchat-5ba2e",
+    storageBucket: "vchat-5ba2e.appspot.com",
+    messagingSenderId: "64968376129",
+    appId: "1:64968376129:web:367ef0bdb422eb1904ebc0"
+  });
+}
+
+if (userId) {
+  const db = firebase.database();
+  const userStatusRef = db.ref(`/status/${userId}`);
+  const connectedRef = db.ref(".info/connected");
+
+  const isOfflineForDatabase = {
+    state: "offline",
+    last_changed: firebase.database.ServerValue.TIMESTAMP,
+  };
+
+  const isOnlineForDatabase = {
+    state: "online",
+    last_changed: firebase.database.ServerValue.TIMESTAMP,
+  };
+
+  connectedRef.on("value", (snapshot) => {
+    if (snapshot.val() === false) return;
+
+    userStatusRef
+      .onDisconnect()
+      .set(isOfflineForDatabase)
+      .then(() => {
+        userStatusRef.set(isOnlineForDatabase);
+      });
+  });
+}
+
+  </script>
+  <script>
+document.getElementById('send-btn').addEventListener('click', () => {
+  const friendId = localStorage.getItem('chatWithUserId');
+  const userId = localStorage.getItem('vchatUserId');
+
+  if (!firebase.apps.length) {
+    firebase.initializeApp({
+      apiKey: "AIzaSyDMg6CD6aBHSix57jcxFDvB4uHk4RDrJyc",
+      authDomain: "vchat-5ba2e.firebaseapp.com",
+      databaseURL: "https://vchat-5ba2e-default-rtdb.firebaseio.com",
+      projectId: "vchat-5ba2e",
+      storageBucket: "vchat-5ba2e.appspot.com",
+      messagingSenderId: "64968376129",
+      appId: "1:64968376129:web:367ef0bdb422eb1904ebc0"
+    });
+  }
+
+  const db = firebase.database();
+  db.ref(`/users/${userId}/username`).once('value').then((userSnapshot) => {
+    const userIdd = userSnapshot.val();
+  
+
+  // Step 1: Check if friend is offline
+  db.ref(`/status/${friendId}`).once('value').then((statusSnapshot) => {
+    const statusData = statusSnapshot.val();
+    if (statusData && statusData.state === "offline") {
+      console.log("📡 Friend is offline. Sending email...");
+      
+
+      // Step 2: Get friend's email
+      db.ref(`/users/${friendId}/email`).once('value').then((emailSnapshot) => {
+        if (emailSnapshot.exists()) {
+          const friendEmail = emailSnapshot.val();
+
+          // Step 3: Send Email via EmailJS
+          emailjs.send("service_7mloee1", "template_mqjowzn", {
+            email: friendEmail,      // Match your template
+            username: userIdd,              // Match your template
+            message: "You have a new message on VChat."
+          }, "1L0OTMVx_Ent25BL_") // Your public key
+          .then((res) => {
+            console.log("✅ Email sent to offline user:", res.status);
+          })
+          .catch((err) => {
+            console.error("❌ Email failed to send:", err);
+          });
+
+        } else {
+          console.error("❌ Friend email not found.");
+        }
+      });
+
+    } else {
+      console.log("✅ Friend is online. No need to send email.");
+    }
+  });
+});
+});
+
+
+  </script>
+</body>
+</html>
