@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vchat - Home Page</title>
+  <link rel="preload" href="img/img1.webp" as="image">
+  <link rel="preload" href="img/logo.png" as="image">
+  <link rel="stylesheet" href="style.css">
+  <!-- Firebase Scripts -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+
+
+  <script defer src="asdd.js"></script>
+</head>
+
+<body>
+  <header>
+    <div class="main-container-top">
+        <img class="avatar" id="my-avatar" src="img/img1.webp" alt="User avatar" width="50" height="50" loading="lazy">
+      <img src="img/logo.png" alt="VChat Logo" class="logo-img" width="120" height="40" loading="lazy">
+      <button id="friend-add" class="add-friend-btn" aria-label="Add Friend">+ Add</button>
+    </div>
+  </header>
+
+
+  <main>
+    <div class="search-btn-container">
+      <input type="search" id="search-btn" placeholder="Search Your Friends" aria-label="Search your friends">
+      <button id="view-requests-btn" class="request-btn" aria-label="View Requests">Requests (0)</button>
+    </div>
+
+    <div id="request-container" class="add-friend-container" style="display:none;">
+      <h3>Friend Requests</h3>
+      <div id="request-list"></div>
+    </div>
+
+    <div class="story-container" id="Story-container">
+      <div style="display: flex;">
+      <button class="Cancel-btn-story" id="cancel-btn" style="display: none;">Cancel</button>
+      <form id="mediaForm">
+  <label id="label-upload" for="mediaInput" class="custom-file-upload" style="display:none;">
+     Select
+  </label>
+  <input type="file" accept="image/*,video/*" id="mediaInput" hidden>
+  <button style="display: none;" type="button" id="upload" style="display:none;">Upload</button>
+</form>
+
+      </div>
+      <div style="display: none;" id="preview"></div>
+      <button id="add-story-btn" aria-label="Add Story">+ Add Story</button>
+    </div>
+
+    <div class="chat-container" id="chat-container">
+      <!-- Chat container will be dynamically populated -->
+    </div>
+
+    <div id="add-friend-container" class="add-friend-container">
+      <div style="display: flex;">
+        <input type="search" id="search-bt-add" placeholder="Search" aria-label="Search to add friend">
+        <button id="search-btn-add" aria-label="Search Button">🔍</button>
+      </div>
+      <div class="search-result-container" id="search-results"></div>
+    </div>
+  </main>
+
+  <footer>
+    <!-- Footer/navigation content -->
+  </footer>
+<script src="tracker.js"></script>
+
+  <script>
+
+    document.getElementById('add-story-btn').addEventListener('click', function () {
+     
+      document.getElementById('mediaInput').style.display='';
+      document.getElementById('cancel-btn').style.display='';
+      document.getElementById('preview').style.display='';
+      document.getElementById('label-upload').style.display='';
+      document.getElementById('upload').style.display='';
+      document.getElementById('add-story-btn').style.display='none';
+      document.getElementById('chat-container').style.display='none';
+
+  const mediaInput = document.getElementById('mediaInput');
+  const preview = document.getElementById('preview');
+
+  mediaInput.addEventListener('change', function () {
+    const file = mediaInput.files[0];
+    preview.innerHTML = ''; // Clear previous preview
+
+    if (!file) return;
+
+    const fileType = file.type;
+
+    if (fileType.startsWith('image/')) {
+      const img = document.createElement('img');
+      img.src = URL.createObjectURL(file);
+      img.style.Width = 'auto';
+      img.style.maxWidth = '300px';
+      img.style.height = 'auto';
+      img.style.borderRadius = '10px';
+      preview.appendChild(img);
+    } else if (fileType.startsWith('video/')) {
+      const video = document.createElement('video');
+      video.src = URL.createObjectURL(file);
+      video.autoplay = true;
+      video.loop = true;
+      video.style.maxWidth = '300px';
+      video.style.borderRadius = '10px';
+      preview.appendChild(video);
+    } else {
+      preview.textContent = 'Unsupported file type';
+    }
+  });
+
+  document.getElementById('mediaForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    const file = mediaInput.files[0];
+    if (!file) return alert('Please select a media file!');
+    
+    // ✅ You can now upload `file` to Firebase or wherever you want
+    console.log('Ready to upload:', file.name);
+  });
+  });
+
+  document.getElementById('cancel-btn').addEventListener('click', function () {
+    document.getElementById('mediaInput').style.display='none';
+      document.getElementById('cancel-btn').style.display='none';
+      document.getElementById('preview').style.display='none';
+      document.getElementById('upload').style.display='none';
+      document.getElementById('label-upload').style.display='none';
+      document.getElementById('add-story-btn').style.display='';
+      document.getElementById('chat-container').style.display='';
+
+  });
+
+  document.getElementById('upload').addEventListener('click', function () {
+  const file = document.getElementById('mediaInput').files[0];
+  if (!file) return alert("Please select a file!");
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  fetch("https://669a-152-59-179-65.ngrok-free.app/upload", {
+    method: "POST",
+    body: formData
+  })
+  .then(res => res.json())
+  .then(data => {
+  alert("✅ File uploaded to local server!");
+  console.log("📂 File URL:", data.url);
+
+  const userId = localStorage.getItem("vchatUserId");
+  const storyRef = firebase.database().ref(`stories/${userId}`);
+
+  storyRef.push({
+    url: data.url,
+    timestamp: Date.now()
+  });
+
+  // Show preview
+  const preview = document.getElementById('preview');
+  preview.innerHTML = '';
+  const video = document.createElement('video');
+  video.src = data.url;
+  video.autoplay = true;
+  video.loop = true;
+  video.muted = true;
+  video.style.maxWidth = '300px';
+  video.style.borderRadius = '10px';
+  preview.appendChild(video);
+}).catch(err => {
+    console.error('❌ Upload failed:', err);
+    alert('Upload failed');
+  });
+});
+
+</script>
+
+
+ 
+</body>
+
+</html>
